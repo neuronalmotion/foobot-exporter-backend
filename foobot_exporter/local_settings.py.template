@@ -11,8 +11,9 @@ CORS_ORIGIN_ALLOW_ALL = False
 #    'authorization',
 #    'x-csrftoken',
 #    'if-none-match',
+#	 'x-api-key-token'
 #)
 #CORS_EXPOSE_HEADERS = (
-#    'etag',
+#    'etag'
 #)
 

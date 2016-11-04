@@ -16,7 +16,7 @@ class SecretKeyMixin(object):
         return (secret_key, response)
 
 
-class OwnerViewSet(viewsets.ViewSet):
+class OwnerViewSet(viewsets.ViewSet, SecretKeyMixin):
     queryset = None
     serializer_class = None
     lookup_url_kwarg = 'username'
