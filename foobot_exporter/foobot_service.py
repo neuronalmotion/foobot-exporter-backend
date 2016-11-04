@@ -3,16 +3,19 @@ import json
 
 from django.conf import settings
 
-def get_devices(secretKey, username):
+def get_devices(username, secretKey):
     url = settings.FOOBOT_API_BASE_URL + '/owner/' + username + '/device/'
+    request = get_authenticated_request(url, secretKey)
+    return get_json_response(request)
+
+def get_authenticated_request(url, secretKey):
     headers = {
         'Content-Type': 'application/json',
         'X-API-KEY-TOKEN': secretKey
     }
-    request = urllib.request.Request(url, headers=headers)
-    response = urllib.request.urlopen(request).readall().decode('utf-8')
-    data = json.loads(response)
-    print(data)
+    return urllib.request.Request(url, headers=headers)
 
-    return data
+def get_json_response(request):
+    response = urllib.request.urlopen(request).readall().decode('utf-8')
+    return  json.loads(response)
 
