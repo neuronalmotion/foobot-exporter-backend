@@ -2,10 +2,12 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import detail_route
+from rest_framework.renderers import JSONRenderer
 
 from .serializers import DeviceSerializer
 from .models import Device
 from . import foobot_service
+from .csv_renderer import CsvRenderer
 
 class SecretKeyMixin(object):
     def get_secret_key_from_request(self, request):
@@ -33,6 +35,7 @@ class OwnerViewSet(viewsets.ViewSet, SecretKeyMixin):
 
 class DeviceViewSet(viewsets.ViewSet, SecretKeyMixin):
     queryset = None
+    renderer_classes = (CsvRenderer, JSONRenderer)
     serializer_class = None
     lookup_url_kwarg = 'uuid'
 
@@ -42,10 +45,12 @@ class DeviceViewSet(viewsets.ViewSet, SecretKeyMixin):
         if not secret_key:
             return response
 
+        content_type=request.accepted_media_type;
         datapoints, status_code = foobot_service.get_datapoints_last(
                 secret_key,
                 uuid,
                 period,
-                average_by)
-        return Response(datapoints, status=status_code)
+                average_by,
+                content_type)
+        return Response(datapoints, status=status_code, content_type=content_type)
 
