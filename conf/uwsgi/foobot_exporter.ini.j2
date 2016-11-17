@@ -1,0 +1,11 @@
+[uwsgi]
+home={{ venv_root }}
+chdir={{ backend_root }}
+module = {{ app_name }}.wsgi
+processes=4
+threads=2
+pidfile=/tmp/{{ app_name }}.pid
+socket=/tmp/{{ app_name }}.sock
+touch-reload={{ backend_root }}/{{ app_name }}/settings.py
+uid=www-data
+gid=www-data

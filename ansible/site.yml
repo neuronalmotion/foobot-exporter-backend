@@ -1,0 +1,96 @@
+---
+- hosts: foobot-exporter.neuronalmotion.com
+  vars:
+      hosts: foobot-exporter.neuronalmotion.com
+      project_root: /srv/www/foobot-exporter
+      backend_root: "{{ project_root }}/backend"
+      webapp_root: "{{ project_root }}/webapp"
+      venv_root: "{{ backend_root }}/venv"
+      app_name: foobot_exporter
+
+      venv_command: "{{ venv_root }}/bin/python"
+      manage_command: "{{ venv_command }} {{ backend_root }}/manage.py"
+
+      python_versions: [ 3.4 ]
+      python_virtualenvs:
+          - path: "{{ venv_root }}"
+            python: python3.4
+
+  pre_tasks:
+      - name: install package dependencies
+        apt: name={{ item }} state=latest
+        with_items:
+            - blender 
+            - cmake 
+            - gettext
+            - gettext 
+            - git
+            - libgeos-dev 
+            - libspatialindex-dev 
+            - openscad
+            - libpcre3
+            - libpcre3-dev
+        tags: install
+
+      - name: update backend code
+        git: repo=https://github.com/neuronalmotion/foobot-exporter-backend.git
+            dest={{ backend_root }}
+            accept_hostkey=yes
+        tags: install, deploy
+
+      - name: copy local_settings
+        template: src="../{{ app_name }}/local_settings.py.j2" 
+            dest="{{ backend_root }}/{{ app_name }}/local_settings.py"
+        tags: install
+
+  roles:
+      - role: Stouts.python
+
+      - role: jdauphant.nginx
+        nginx_sites:
+            foobot-exporter:
+                - listen 80
+                - server_name foobot-exporter.neuronalmotion.com
+                - root {{ backend_root }}
+                - access_log "/var/log/nginx/foobot-exporter.access.log"
+                - error_log "/var/log/nginx/foobot-exporter.error.log"
+                - location /app { alias "{{ webapp_root }}"; try_files $uri $uri/ /index.html; }
+                - location /static { alias "{{ backend_root }}/static";  }
+                - location / { uwsgi_pass unix:///tmp/{{ app_name }}.sock; 
+                               include uwsgi_params; 
+                               uwsgi_read_timeout 300; 
+                  }
+        tags: install, deploy
+
+  tasks:
+      - name: install requirements
+        pip:
+            requirements: "{{ backend_root }}/requirements.txt"
+            virtualenv: "{{ venv_root }}"
+            virtualenv_python: python3.4
+        tags: install
+
+      - name: copy uwsgi config
+        template: src="../conf/uwsgi/{{ app_name }}.ini.j2" 
+            dest="/etc/uwsgi-emperor/vassals/{{ app_name }}.ini"
+        tags: install, deploy
+
+      - name: migrate database
+        command: "{{ manage_command }} migrate"
+        tags: install, deploy
+
+      - name: collect static medias
+        command: "{{ manage_command }} collectstatic --no-input"
+        tags: install, deploy
+
+      - name: fix file permissions
+        file: dest={{ backend_root }}
+            owner=www-data
+            group=www-data
+            recurse=yes
+        tags: install, deploy
+
+      - name: reload wsgi app
+        file: path="{{ backend_root }}/foobot_exporter/settings.py" state=touch
+        tags: deploy
+
