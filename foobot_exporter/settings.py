@@ -124,6 +124,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-FOOBOT_API_BASE_URL = 'http://api.foobot.io/v2'
+FOOBOT_API_BASE_URL = 'https://api.foobot.io/v2'
 
 from foobot_exporter.local_settings import *

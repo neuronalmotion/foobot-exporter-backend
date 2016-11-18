@@ -48,10 +48,17 @@
 
       - role: jdauphant.nginx
         nginx_sites:
-            foobot-exporter:
+            foobot-exporter-80:
                 - listen 80
-                - server_name foobot-exporter.neuronalmotion.com
+                - server_name {{ hosts }}
                 - root {{ backend_root }}
+                - return 301 https://$server_name$request_uri
+            foobot-exporter:
+                - listen 443 ssl
+                - server_name {{ hosts }}
+                - root {{ backend_root }}
+                - ssl_certificate /etc/nginx/ssl/concat-wildcard-gandi.crt
+                - ssl_certificate_key /etc/nginx/ssl/gandi-wildcard.key
                 - access_log "/var/log/nginx/foobot-exporter.access.log"
                 - error_log "/var/log/nginx/foobot-exporter.error.log"
                 - location /app { alias "{{ webapp_root }}"; try_files $uri $uri/ /index.html; }
