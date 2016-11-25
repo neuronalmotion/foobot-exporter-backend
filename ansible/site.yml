@@ -61,12 +61,16 @@
                 - ssl_certificate_key /etc/nginx/ssl/gandi-wildcard.key
                 - access_log "/var/log/nginx/foobot-exporter.access.log"
                 - error_log "/var/log/nginx/foobot-exporter.error.log"
-                - location /app { alias "{{ webapp_root }}"; try_files $uri $uri/ /index.html; }
                 - location /static { alias "{{ backend_root }}/static";  }
-                - location / { uwsgi_pass unix:///tmp/{{ app_name }}.sock; 
-                               include uwsgi_params; 
-                               uwsgi_read_timeout 300; 
-                  }
+                - location /ws { 
+                      rewrite /ws(.*) $1 break;
+                      uwsgi_pass unix:///tmp/{{ app_name }}.sock; 
+                      include uwsgi_params; 
+                      uwsgi_read_timeout 300; 
+                      uwsgi_param SCRIPT_NAME /ws;
+                      uwsgi_modifier1 30;
+                    }
+                - location / { root "{{ webapp_root }}"; try_files $uri $uri/ /index.html; }
         tags: install, deploy
 
   tasks:
