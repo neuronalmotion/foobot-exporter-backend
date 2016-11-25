@@ -10,7 +10,6 @@ router.register(r'owners', OwnerViewSet, base_name='owner')
 router.register(r'devices', DeviceViewSet, base_name='device')
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
     url(r'^api/', include(router.urls, namespace='api')),
-    url(r'^$', RedirectView.as_view(url='/app/')),
+    url(r'^$', RedirectView.as_view(url='/')),
 ]
